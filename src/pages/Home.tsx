@@ -1,20 +1,53 @@
-import Achievement from '@main/components/Achievement';
-import Profile from '@main/components/Profile';
+import Achievement from '@main/components/AchievementCard';
+import Profile from '@main/components/ProfileCard';
 import { Card } from '@main/components/ui/Card';
 import { CardBox } from '@main/components/ui/CardBox';
 import { CardContent } from '@main/components/ui/CardContent';
-import { Progress } from '@main/components/ui/Progress';
-import WorkExperience from '@main/components/WorkExperience';
+import WorkExperience from '@main/pages/WorkExperience';
 import { AiFillProject, AiFillExperiment } from 'react-icons/ai';
 import { ImStatsBars } from 'react-icons/im';
 
 const Home = () => {
   const skills = [
-    { name: 'HTML5 & CSS3', level: 90 },
-    { name: 'Javascript', level: 78 },
-    { name: 'TypeScript', level: 70 },
-    { name: 'ReactJS', level: 80 },
-    { name: 'Vue.js', level: 86 },
+    {
+      category: 'Frontend Development',
+      stack: [
+        'React',
+        'TypeScript',
+        'Next.js',
+        'Tailwind CSS',
+        'Redux',
+        'GraphQL',
+      ],
+    },
+    {
+      category: 'Backend Development',
+      stack: ['Node.js', 'Express', 'REST API', 'GraphQL', 'PostgreSQL'],
+    },
+    {
+      category: 'Data Analysis & AI',
+      stack: ['Python', 'Pandas', 'FinBERT', 'Python NLP'],
+    },
+    {
+      category: 'Web Scraping & Data Extraction',
+      stack: ['BeautifulSoup4', 'Cloudscraper', 'Requests/HTTPX'],
+    },
+    {
+      category: 'Data Processing & Text Matching',
+      stack: ['RapidFuzz', 'Regex', 'Pandas'],
+    },
+    {
+      category: 'Tools, Automation, and Workflow Optimization',
+      stack: [
+        'Git',
+        'GitHub Actions',
+        'Docker',
+        'Agile/Scrum',
+        'tqdm',
+        'Multiprocessing / AsyncIO',
+        'Cron Job',
+      ],
+    },
   ];
 
   return (
@@ -32,13 +65,16 @@ const Home = () => {
       </div>
       <div className="grid grid-cols-12 gap-6 items-start">
         {/* Projects Widget */}
-        <Card className="col-span-12 lg:col-span-8">
+        <Card className="col-span-12 lg:col-span-6">
           <CardContent>
             <h3 className="text-lg font-semibold mb-6 flex items-center justify-start gap-2">
               <AiFillProject size={24} color="#ffb900" />
               Projects
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <span className="text-xs text-gray-400">
+              <i>Coming soon...</i>
+            </span>
+            {/* <div className="grid grid-cols-2 gap-4">
               <div className="col-span-1">
                 <CardBox>
                   <CardContent>
@@ -55,26 +91,39 @@ const Home = () => {
                   </CardContent>
                 </CardBox>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
         {/* Skills Widget */}
-        <Card className="col-span-12 lg:col-span-4">
+        <Card className="col-span-12 lg:col-span-6">
           <CardContent>
             <h3 className="text-lg font-semibold mb-6 flex items-center justify-start gap-2">
               <ImStatsBars size={24} color="#ffb900" />
               Skills
             </h3>
-            <div className="space-y-4">
-              {skills.map((skill) => (
-                <div key={skill.name}>
-                  <div className="flex justify-between">
-                    <p className="text-sm">{skill.name}</p>
-                    <p className="text-sm text-amber-300">{skill.level}%</p>
+            <div className="grid md:grid-rows-2 gap-6">
+              {skills.map((item, idx) => (
+                <CardBox
+                  key={idx}
+                  className="rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div>
+                    <h2 className="text-lg font-semibold">{item.category}</h2>
                   </div>
-                  <Progress value={skill.level} />
-                </div>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {item.stack.map((skill, i) => (
+                        <span
+                          key={i}
+                          className={`px-3 py-1 text-sm font-medium rounded-full border hover:bg-gray-200 transition-colors`}
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </CardBox>
               ))}
             </div>
           </CardContent>
@@ -96,7 +145,10 @@ const Home = () => {
               <AiFillExperiment size={24} color="#ffb900" />
               Practices
             </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <span className="text-xs text-gray-400">
+              <i>Coming soon...</i>
+            </span>
+            {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="col-span-1">
                 <CardBox>
                   <CardContent>
@@ -113,7 +165,7 @@ const Home = () => {
                   </CardContent>
                 </CardBox>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </div>

@@ -36,21 +36,29 @@ const Sidebar = ({ expand, funcExpand }: SIDEBAR_TYPE) => {
           expand={expand}
           link={'/'}
         />
-        <NavigationIcon
+        {/* <NavigationIcon
           type="projects"
           text="projects"
           color="#1447e6"
           size={16}
           expand={expand}
           link={'/projects'}
-        />
+        /> */}
         <NavigationIcon
-          type="practices"
-          text="practices"
+          type="profile"
+          text="profile"
           color="#1447e6"
           size={16}
           expand={expand}
-          link={'/practices'}
+          link={'/profile'}
+        />
+        <NavigationIcon
+          type="achievement"
+          text="achievement"
+          color="#1447e6"
+          size={16}
+          expand={expand}
+          link={'/achievement'}
         />
       </ul>
     </div>
