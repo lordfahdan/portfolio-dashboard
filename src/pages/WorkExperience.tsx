@@ -1,6 +1,6 @@
 import { MdWorkHistory } from 'react-icons/md';
-import { CardContent } from './ui/CardContent';
-import { Timeline } from './ui/Timeline';
+import { CardContent } from '../components/ui/CardContent';
+import { Timeline } from '../components/ui/Timeline';
 import useGoogleSheet from '@main/hooks/useGoogleSheet';
 import { useCallback } from 'react';
 
@@ -43,17 +43,19 @@ const WorkExperience = () => {
       <Timeline>
         {loading === false &&
           data !== null &&
-          data.filter((item) => item.status === 'active').map((experience, index) => (
-            <Timeline.Item key={index}>
-              <h4 className="font-bold">{experience.position}</h4>
-              <p>
-                <span className="text-white font-bold text-sm">
-                  {experience.startDate} - {experience.endDate}
-                </span>{' '}
-                at {experience.company}
-              </p>
-            </Timeline.Item>
-          ))}
+          data
+            .filter((item) => item.status === 'active')
+            .map((experience, index) => (
+              <Timeline.Item key={index}>
+                <h4 className="font-bold">{experience.position}</h4>
+                <p>
+                  <span className="text-white font-bold text-sm">
+                    {experience.startDate} - {experience.endDate}
+                  </span>{' '}
+                  at {experience.company}
+                </p>
+              </Timeline.Item>
+            ))}
       </Timeline>
       {loading === false && error !== null && (
         <span className="text-amber-400">{error}</span>

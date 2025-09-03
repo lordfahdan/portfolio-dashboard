@@ -1,5 +1,10 @@
 import { IconType } from 'react-icons';
-import { AiFillExperiment, AiFillHome, AiFillProject } from 'react-icons/ai';
+import {
+  AiFillHome,
+  AiFillProfile,
+  AiFillProject,
+  AiFillTrophy,
+} from 'react-icons/ai';
 import { NavLink } from 'react-router';
 
 type NAVIGATION_ICON_TYPE = {
@@ -14,10 +19,18 @@ type NAVIGATION_ICON_TYPE = {
 const iconMapActive: { [key: string]: IconType } = {
   home: AiFillHome,
   projects: AiFillProject,
-  practices: AiFillExperiment,
+  profile: AiFillProfile,
+  achievement: AiFillTrophy,
 };
 
-const NavigationIcon = ({ type, text, size, color, expand, link }: NAVIGATION_ICON_TYPE) => {
+const NavigationIcon = ({
+  type,
+  text,
+  size,
+  color,
+  expand,
+  link,
+}: NAVIGATION_ICON_TYPE) => {
   const IconComponent = iconMapActive[type];
 
   return IconComponent ? (
@@ -29,10 +42,14 @@ const NavigationIcon = ({ type, text, size, color, expand, link }: NAVIGATION_IC
               isActive ? 'bg-gray-400 cursor-default' : ''
             }`}
           >
-            <div className={`flex items-center justify-center p-2 rounded-lg ${isActive? 'bg-blue-700' : 'bg-blue-950'}`}>
+            <div
+              className={`flex items-center justify-center p-2 rounded-lg ${
+                isActive ? 'bg-blue-700' : 'bg-blue-950'
+              }`}
+            >
               <IconComponent size={size} color={isActive ? '#fff' : color} />
             </div>
-            {expand && <span className='whitespace-nowrap'>{text}</span>}
+            {expand && <span className="whitespace-nowrap">{text}</span>}
           </div>
         )}
       </NavLink>

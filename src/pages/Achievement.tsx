@@ -1,10 +1,9 @@
 import useGoogleSheet from '@main/hooks/useGoogleSheet';
 import { useCallback } from 'react';
 import { GrCertificate } from 'react-icons/gr';
-import { CardContent } from './ui/CardContent';
-import { GiAchievement } from 'react-icons/gi';
-import { Button } from './ui/Button';
-import { CardBox } from './ui/CardBox';
+import { CardContent } from '../components/ui/CardContent';
+import { Button } from '../components/ui/Button';
+import { CardBox } from '../components/ui/CardBox';
 
 type AchievementType = {
   title: string;
@@ -36,17 +35,16 @@ const Achievement = () => {
 
   return (
     <CardContent>
-      <h3 className="text-lg font-semibold mb-6 flex items-center justify-start gap-2">
-        <GiAchievement size={24} color="#ffb900" />
-        Achievement
-      </h3>
       {loading === true && (
         <span className="text-white">Sedang diproses...</span>
       )}
       {loading === false &&
         data !== null &&
         data.map((achievement, id) => (
-          <CardBox key={id} className="hover:bg-gray-700 transition duration-300">
+          <CardBox
+            key={id}
+            className="hover:bg-gray-700 transition duration-300"
+          >
             <CardContent className="flex items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
