@@ -1,69 +1,68 @@
-const SESSION_KEY = "portfolio_session_id";
-const SESSION_STARTED_KEY = "portfolio_session_started";
-
-function getSessionId(): string {
-  const existing = sessionStorage.getItem(SESSION_KEY);
-
-  if (existing) {
-    return existing;
-  }
-
-  const id =
-    crypto.randomUUID?.() ??
-    `${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}`;
-
-  sessionStorage.setItem(SESSION_KEY, id);
-  sessionStorage.setItem(
-    SESSION_STARTED_KEY,
-    Date.now().toString(),
-  );
-
-  return id;
-}
-
-function getDevice(): string {
-  const width = window.innerWidth;
-
-  if (width < 640) return "Mobile";
-  if (width < 1024) return "Tablet";
-
-  return "Desktop";
-}
-
-function getReferrer(): string {
-  if (!document.referrer) {
-    return "Direct";
-  }
-
+export async function trackVisitor(
+  event: VisitorEvent = {},
+) {
   try {
-    const url = new URL(document.referrer);
+    const isTracked =
+      sessionStorage.getItem(TRACKED_KEY);
 
-    return url.hostname;
-  } catch {
-    return document.referrer;
-  }
-}
+    const sessionId = getSessionId();
+    const pageViews = getPageViews();
 
-export async function trackVisitor(): Promise<void> {
-  try {
-    const payload = {
-      page: window.location.pathname,
+    const isNewVisitor = !isTracked;
+
+    if (isNewVisitor) {
+      sessionStorage.setItem(
+        TRACKED_KEY,
+        "true",
+      );
+    }
+
+    const browserTimezone =
+      Intl.DateTimeFormat().resolvedOptions().timeZone ||
+      "Unknown";
+
+    const language =
+      navigator.language || "Unknown";
+
+    const data = {
+      eventType:
+        event.eventType ||
+        (isNewVisitor
+          ? "NEW VISITOR"
+          : "PAGE VIEW"),
+
+      sessionId,
+
+      pathname: window.location.pathname,
+
       title: document.title,
-      referrer: getReferrer(),
 
-      sessionId: getSessionId(),
+      referrer:
+        document.referrer || "Direct",
 
-      screen: `${window.screen.width} × ${window.screen.height}`,
+      url: window.location.href,
 
-      language: navigator.language,
+      browserTimezone,
 
-      timezone:
-        Intl.DateTimeFormat().resolvedOptions()
-          .timeZone,
+      language,
 
-      device: getDevice(),
+      screenWidth: window.screen.width,
+
+      screenHeight: window.screen.height,
+
+      device: detectDevice(),
+
+      os: detectOS(),
+
+      browser: detectBrowser(),
+
+      pageViews,
+
+      previousPage:
+        event.previousPage || undefined,
+
+      duration:
+        event.duration || undefined,
     };
 
     await fetch("/api/visitor", {
@@ -73,12 +72,11 @@ export async function trackVisitor(): Promise<void> {
         "Content-Type": "application/json",
       },
 
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data),
 
       keepalive: true,
     });
   } catch (error) {
-    // Analytics must NEVER break the portfolio.
     console.debug(
       "Visitor tracking unavailable:",
       error,
