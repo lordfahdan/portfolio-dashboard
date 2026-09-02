@@ -373,7 +373,7 @@ export default async function handler(
       `IP Address  : ${escapeHtml(ip)}`,
       "",
       "🔎 <b>SESSION</b>",
-      `Session ID  : ${escapeHtml(String(sessionId))}</code>`,
+      `Session ID  : ${escapeHtml(String(sessionId))}`,
       "",
     ].join("\n");
 
