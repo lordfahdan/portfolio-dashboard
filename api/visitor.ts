@@ -304,15 +304,9 @@ export default async function handler(
 
     const ip = getClientIp(req);
 
-    const countryCode =
-      req.headers.get(
-        "x-vercel-ip-country",
-      ) || "";
+    const countryCode = req.headers["x-vercel-ip-country"] || "";
     
-    const regionCode =
-      req.headers.get(
-        "x-vercel-ip-country-region",
-      ) || "";
+    const regionCode = req.headers["x-vercel-ip-country-region"] || "";
     
     const countryInfo =
       getCountry(countryCode);
