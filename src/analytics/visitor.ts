@@ -1,209 +1,84 @@
-type VisitorEvent = {
-  eventType?: "NEW VISITOR" | "PAGE VIEW";
-  previousPage?: string;
-  duration?: number;
-};
-
-const SESSION_KEY = "lord_visitor_session";
-const PAGE_VIEW_KEY = "lord_visitor_page_views";
-const TRACKED_KEY = "lord_visitor_tracked";
+const SESSION_KEY = "portfolio_session_id";
+const SESSION_STARTED_KEY = "portfolio_session_started";
 
 function getSessionId(): string {
-  let sessionId = sessionStorage.getItem(SESSION_KEY);
+  const existing = sessionStorage.getItem(SESSION_KEY);
 
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-
-    sessionStorage.setItem(
-      SESSION_KEY,
-      sessionId,
-    );
+  if (existing) {
+    return existing;
   }
 
-  return sessionId;
-}
+  const id =
+    crypto.randomUUID?.() ??
+    `${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}`;
 
-function getPageViews(): number {
-  const current =
-    Number(
-      sessionStorage.getItem(PAGE_VIEW_KEY),
-    ) || 0;
-
-  const next = current + 1;
-
+  sessionStorage.setItem(SESSION_KEY, id);
   sessionStorage.setItem(
-    PAGE_VIEW_KEY,
-    String(next),
+    SESSION_STARTED_KEY,
+    Date.now().toString(),
   );
 
-  return next;
+  return id;
 }
 
-function detectDevice(): string {
+function getDevice(): string {
   const width = window.innerWidth;
 
-  if (width < 768) {
-    return "Mobile";
-  }
-
-  if (width < 1024) {
-    return "Tablet";
-  }
+  if (width < 640) return "Mobile";
+  if (width < 1024) return "Tablet";
 
   return "Desktop";
 }
 
-function detectOS(): string {
-  const ua = navigator.userAgent;
-
-  if (/Windows NT/i.test(ua)) {
-    return "Windows";
+function getReferrer(): string {
+  if (!document.referrer) {
+    return "Direct";
   }
 
-  if (/Android/i.test(ua)) {
-    return "Android";
-  }
-
-  if (/iPhone|iPad|iPod/i.test(ua)) {
-    return "iOS";
-  }
-
-  if (/Mac OS X/i.test(ua)) {
-    return "macOS";
-  }
-
-  if (/Linux/i.test(ua)) {
-    return "Linux";
-  }
-
-  return "Unknown";
-}
-
-function detectBrowser(): string {
-  const ua = navigator.userAgent;
-
-  if (/Edg/i.test(ua)) {
-    return "Microsoft Edge";
-  }
-
-  if (/OPR|Opera/i.test(ua)) {
-    return "Opera";
-  }
-
-  if (/Firefox/i.test(ua)) {
-    return "Firefox";
-  }
-
-  if (/Chrome/i.test(ua)) {
-    return "Chrome";
-  }
-
-  if (/Safari/i.test(ua)) {
-    return "Safari";
-  }
-
-  return "Unknown";
-}
-
-export async function trackVisitor(
-  event: VisitorEvent = {},
-): Promise<void> {
   try {
-    const sessionId = getSessionId();
+    const url = new URL(document.referrer);
 
-    const pageViews = getPageViews();
+    return url.hostname;
+  } catch {
+    return document.referrer;
+  }
+}
 
-    const isTracked =
-      sessionStorage.getItem(TRACKED_KEY);
+export async function trackVisitor(): Promise<void> {
+  try {
+    const payload = {
+      page: window.location.pathname,
+      title: document.title,
+      referrer: getReferrer(),
 
-    const isNewVisitor = !isTracked;
+      sessionId: getSessionId(),
 
-    if (isNewVisitor) {
-      sessionStorage.setItem(
-        TRACKED_KEY,
-        "true",
-      );
-    }
+      screen: `${window.screen.width} × ${window.screen.height}`,
 
-    const browserTimezone =
-      Intl.DateTimeFormat().resolvedOptions()
-        .timeZone || "Unknown";
+      language: navigator.language,
 
-    const language =
-      navigator.language || "Unknown";
+      timezone:
+        Intl.DateTimeFormat().resolvedOptions()
+          .timeZone,
 
-    const data = {
-      eventType:
-        event.eventType ||
-        (isNewVisitor
-          ? "NEW VISITOR"
-          : "PAGE VIEW"),
-
-      sessionId,
-
-      pathname:
-        window.location.pathname,
-
-      title:
-        document.title,
-
-      referrer:
-        document.referrer || "Direct",
-
-      url:
-        window.location.href,
-
-      browserTimezone,
-
-      language,
-
-      screenWidth:
-        window.screen.width,
-
-      screenHeight:
-        window.screen.height,
-
-      device:
-        detectDevice(),
-
-      os:
-        detectOS(),
-
-      browser:
-        detectBrowser(),
-
-      pageViews,
-
-      previousPage:
-        event.previousPage,
-
-      duration:
-        event.duration,
+      device: getDevice(),
     };
 
-    const response = await fetch(
-      "/api/visitor",
-      {
-        method: "POST",
+    await fetch("/api/visitor", {
+      method: "POST",
 
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-
-        body: JSON.stringify(data),
-
-        keepalive: true,
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
 
-    if (!response.ok) {
-      console.debug(
-        "Visitor API returned:",
-        response.status,
-      );
-    }
+      body: JSON.stringify(payload),
+
+      keepalive: true,
+    });
   } catch (error) {
+    // Analytics must NEVER break the portfolio.
     console.debug(
       "Visitor tracking unavailable:",
       error,
