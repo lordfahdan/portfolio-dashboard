@@ -1,134 +1,123 @@
-export default async function handler(req: Request): Promise<Response> {
+function getHeader(
+  req: VercelRequest,
+  name: string,
+): string {
+  const value = req.headers[name];
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+function getClientIp(req: VercelRequest): string {
+  const forwarded = getHeader(req, "x-forwarded-for");
+
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  return getHeader(req, "x-real-ip") || "Unknown";
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse,
+) {
   if (req.method !== "POST") {
-    return new Response("Method Not Allowed", {
-      status: 405,
-      headers: {
-        Allow: "POST",
-      },
+    return res.status(405).json({
+      error: "Method not allowed",
+    });
+  }
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatId) {
+    return res.status(500).json({
+      error: "Telegram environment variables are not configured",
     });
   }
 
   try {
-    const body = await req.json();
+    const body =
+      typeof req.body === "string"
+        ? JSON.parse(req.body)
+        : req.body ?? {};
 
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
-
-    if (!botToken || !chatId) {
-      console.error("Telegram environment variables are missing");
-
-      return new Response("Server configuration error", {
-        status: 500,
-      });
-    }
-
-    // IP visitor
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    const ip =
-      forwardedFor?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      "Unknown";
-
-    // Vercel geolocation headers
-    const country =
-      req.headers.get("x-vercel-ip-country") || "Unknown";
-
-    const region =
-      req.headers.get("x-vercel-ip-country-region") || "Unknown";
-
-    const city =
-      req.headers.get("x-vercel-ip-city") || "Unknown";
-
-    const ipTimezone =
-      req.headers.get("x-vercel-ip-timezone") || "Unknown";
-
-    // Client data
     const {
-      sessionId,
-      pathname,
-      title,
-      referrer,
-      url,
-      browserTimezone,
-      language,
-      screenWidth,
-      screenHeight,
-      device,
-      os,
-      browser,
-      eventType = "NEW VISITOR",
-      pageViews = 1,
-      previousPage,
-      duration,
+      page = "/",
+      referrer = "Direct",
+      title = "Portfolio",
+      sessionId = "unknown",
+      screen = "unknown",
+      language = "unknown",
+      timezone = "unknown",
+      device = "unknown",
     } = body;
 
-    const now = new Date();
+    const ip = getClientIp(req);
 
-    const time = new Intl.DateTimeFormat("id-ID", {
+    const country =
+      getHeader(req, "x-vercel-ip-country") || "Unknown";
+
+    const region =
+      getHeader(req, "x-vercel-ip-country-region") || "Unknown";
+
+    const city =
+      getHeader(req, "x-vercel-ip-city") || "Unknown";
+
+    const vercelTimezone =
+      getHeader(req, "x-vercel-ip-timezone") || timezone;
+
+    const userAgent =
+      getHeader(req, "user-agent") || "Unknown";
+
+    const forwardedHost =
+      getHeader(req, "x-forwarded-host") ||
+      getHeader(req, "host") ||
+      "Unknown";
+
+    const now = new Date().toLocaleString("en-GB", {
       timeZone: "Asia/Jakarta",
       dateStyle: "medium",
       timeStyle: "medium",
-    }).format(now);
+    });
 
-    const timezoneMatch =
-      browserTimezone !== "Unknown" &&
-      ipTimezone !== "Unknown"
-        ? browserTimezone === ipTimezone
-        : null;
-
-    const timezoneSignal =
-      timezoneMatch === null
-        ? "⚪ Unknown"
-        : timezoneMatch
-          ? "✅ Match"
-          : "⚠️ Mismatch";
-
-    const message = `
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-${eventType === "NEW VISITOR" ? "🔔 NEW VISITOR" : "📄 PAGE VIEW"}
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🕐 TIME
-${time} WIB
-
-🌐 CONNECTION
-IP        : ${ip}
-Country   : ${country}
-Region    : ${region}
-City      : ${city} ⚠️ Approx.
-IP TZ     : ${ipTimezone}
-
-💻 DEVICE
-Type      : ${device || "Unknown"}
-OS        : ${os || "Unknown"}
-Browser   : ${browser || "Unknown"}
-Screen    : ${screenWidth || "?"} × ${screenHeight || "?"}
-Language  : ${language || "Unknown"}
-Timezone  : ${browserTimezone || "Unknown"}
-
-📍 GEOLOCATION
-Location  : ${city}, ${region}, ${country}
-Accuracy  : ⚠️ IP-based / Approximate
-
-📄 PAGE
-Path      : ${pathname || "/"}
-Title     : ${title || "Unknown"}
-Referrer  : ${referrer || "Direct"}
-URL       : ${url || "Unknown"}
-
-🔎 SESSION
-Session ID : ${sessionId || "Unknown"}
-Page Views : ${pageViews}
-
-${previousPage ? `Previous   : ${previousPage}` : ""}
-${duration ? `Duration   : ${duration}s` : ""}
-
-⚠️ SIGNALS
-IP/Timezone : ${timezoneSignal}
-Language    : ${language || "Unknown"}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-`;
+    const message = [
+      "👀 <b>NEW PORTFOLIO VISITOR</b>",
+      "",
+      `🕐 <b>Time:</b> ${escapeHtml(now)} WIB`,
+      `🌐 <b>Page:</b> <code>${escapeHtml(String(page))}</code>`,
+      `📄 <b>Title:</b> ${escapeHtml(String(title))}`,
+      "",
+      "📍 <b>LOCATION</b>",
+      `Country: ${escapeHtml(country)}`,
+      `Region: ${escapeHtml(region)}`,
+      `City: ${escapeHtml(city)}`,
+      `Timezone: ${escapeHtml(vercelTimezone)}`,
+      "",
+      "💻 <b>DEVICE</b>",
+      `Device: ${escapeHtml(String(device))}`,
+      `Screen: ${escapeHtml(String(screen))}`,
+      `Language: ${escapeHtml(String(language))}`,
+      "",
+      "🔗 <b>SOURCE</b>",
+      `Referrer: ${escapeHtml(String(referrer))}`,
+      `Host: ${escapeHtml(forwardedHost)}`,
+      "",
+      "🌐 <b>BROWSER</b>",
+      `<code>${escapeHtml(userAgent)}</code>`,
+      "",
+      "🆔 <b>SESSION</b>",
+      `<code>${escapeHtml(String(sessionId))}</code>`,
+      "",
+      "🔎 <b>NETWORK</b>",
+      `IP: <code>${escapeHtml(ip)}</code>`,
+    ].join("\n");
 
     const telegramResponse = await fetch(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
@@ -139,30 +128,34 @@ Language    : ${language || "Unknown"}
         },
         body: JSON.stringify({
           chat_id: chatId,
-          text: message.trim(),
+          text: message,
+          parse_mode: "HTML",
           disable_web_page_preview: true,
         }),
       },
     );
 
     if (!telegramResponse.ok) {
-      const error = await telegramResponse.text();
+      const errorText = await telegramResponse.text();
 
-      console.error("Telegram API error:", error);
+      console.error(
+        "Telegram API error:",
+        errorText,
+      );
 
-      return new Response("Failed to send Telegram message", {
-        status: 502,
+      return res.status(502).json({
+        error: "Failed to send Telegram notification",
       });
     }
 
-    return Response.json({
+    return res.status(200).json({
       success: true,
     });
   } catch (error) {
     console.error("Visitor tracking error:", error);
 
-    return new Response("Internal Server Error", {
-      status: 500,
+    return res.status(500).json({
+      error: "Internal server error",
     });
   }
 }
