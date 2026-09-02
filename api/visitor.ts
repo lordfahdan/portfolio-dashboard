@@ -1,3 +1,8 @@
+import {
+  getCountry,
+  getRegion,
+} from "./geo";
+
 function getHeader(
   req: VercelRequest,
   name: string,
@@ -61,11 +66,30 @@ export default async function handler(
 
     const ip = getClientIp(req);
 
+    const countryCode =
+      req.headers.get(
+        "x-vercel-ip-country",
+      ) || "";
+    
+    const regionCode =
+      req.headers.get(
+        "x-vercel-ip-country-region",
+      ) || "";
+    
+    const countryInfo =
+      getCountry(countryCode);
+    
     const country =
-      getHeader(req, "x-vercel-ip-country") || "Unknown";
-
+      countryInfo.name;
+    
+    const flag =
+      countryInfo.flag;
+    
     const region =
-      getHeader(req, "x-vercel-ip-country-region") || "Unknown";
+      getRegion(
+        countryCode,
+        regionCode,
+      );
 
     const city =
       getHeader(req, "x-vercel-ip-city") || "Unknown";
@@ -88,35 +112,37 @@ export default async function handler(
     });
 
     const message = [
-      "👀 <b>NEW PORTFOLIO VISITOR</b>",
+      "🔔 <b>NEW VISITOR</b>",
       "",
-      `🕐 <b>Time:</b> ${escapeHtml(now)} WIB`,
-      `🌐 <b>Page:</b> <code>${escapeHtml(String(page))}</code>`,
-      `📄 <b>Title:</b> ${escapeHtml(String(title))}`,
+      "🕐 <b>Time</b>",
+      `${escapeHtml(now)} WIB`,
       "",
-      "📍 <b>LOCATION</b>",
-      `Country: ${escapeHtml(country)}`,
-      `Region: ${escapeHtml(region)}`,
-      `City: ${escapeHtml(city)}`,
-      `Timezone: ${escapeHtml(vercelTimezone)}`,
+      "📍 <b>GEOLOCATION</b>",
+      `Country     : ${flag} ${country}`,
+      `Region      : ${region}`,
+      `City        : ${city} ⚠️ Approx.`,
+      `Timezone    : ${escapeHtml(vercelTimezone)}`,
+      `Source      : Vercel IP Geolocation`,
       "",
       "💻 <b>DEVICE</b>",
-      `Device: ${escapeHtml(String(device))}`,
-      `Screen: ${escapeHtml(String(screen))}`,
-      `Language: ${escapeHtml(String(language))}`,
+      `Type        : ${escapeHtml(String(device))}`,
+      `Browser     : ${escapeHtml(userAgent)}`,
+      `Screen      : ${escapeHtml(String(screen))}`,
+      `Language    : ${escapeHtml(String(language))}`,
       "",
       "🔗 <b>SOURCE</b>",
-      `Referrer: ${escapeHtml(String(referrer))}`,
-      `Host: ${escapeHtml(forwardedHost)}`,
+      `Referrer    : ${escapeHtml(String(referrer))}`,
+      `Host        : ${escapeHtml(forwardedHost)}`,
       "",
-      "🌐 <b>BROWSER</b>",
-      `<code>${escapeHtml(userAgent)}</code>`,
+      "📄 <b>Page</b>",
+      `Path        : ${escapeHtml(String(page))}`,
+      `Title       : ${escapeHtml(String(title))}`,
+      "🛜 <b>NETWORK</b>",
+      `IP Address  : ${escapeHtml(ip)}`,
       "",
-      "🆔 <b>SESSION</b>",
-      `<code>${escapeHtml(String(sessionId))}</code>`,
+      "🔎 <b>SESSION</b>",
+      `Session ID  : ${escapeHtml(String(sessionId))}</code>`,
       "",
-      "🔎 <b>NETWORK</b>",
-      `IP: <code>${escapeHtml(ip)}</code>`,
     ].join("\n");
 
     const telegramResponse = await fetch(
