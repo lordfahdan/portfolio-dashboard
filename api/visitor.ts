@@ -188,7 +188,7 @@ function normalizeCode(
     .toUpperCase();
 }
 
-export function getCountry(
+function getCountry(
   countryCode: string | null | undefined,
 ): CountryInfo {
   const code =
@@ -202,7 +202,7 @@ export function getCountry(
   );
 }
 
-export function getRegion(
+function getRegion(
   countryCode: string | null | undefined,
   regionCode: string | null | undefined,
 ): string {
@@ -245,8 +245,18 @@ function getHeader(
   req: VercelRequest,
   name: string,
 ): string {
-  const value = req.headers[name];
+  const value = decodeHeader(req.headers[name]);
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+function decodeHeader(value: string | undefined): string {
+  if (!value) return "Unknown";
+
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 function getClientIp(req: VercelRequest): string {
@@ -350,31 +360,31 @@ export default async function handler(
       `${escapeHtml(now)} WIB`,
       "",
       "📍 <b>GEOLOCATION</b>",
-      `<code>Country     : ${escapeHtml(flag)} ${escapeHtml(country)}`,
-      `Region      : ${escapeHtml(region)}`,
-      `City        : ${escapeHtml(city)} ⚠️ Approx.`,
-      `Timezone    : ${escapeHtml(vercelTimezone)}`,
-      `Source      : Vercel IP Geolocation</code>`,
+      `<code>Country		: ${escapeHtml(flag)} ${escapeHtml(country)}`,
+      `Region			: ${escapeHtml(region)}`,
+      `City				: ${escapeHtml(city)} ⚠️ Approx.`,
+      `Timezone		: ${escapeHtml(vercelTimezone)}`,
+      `Source			: Vercel IP Geolocation</code>`,
       "",
       "💻 <b>DEVICE</b>",
-      `<code>Type        : ${escapeHtml(String(device))}`,
-      `Browser     : ${escapeHtml(userAgent)}`,
-      `Screen      : ${escapeHtml(String(screen))}`,
-      `Language    : ${escapeHtml(String(language))}</code>`,
+      `<code>Type			: ${escapeHtml(String(device))}`,
+      `Browser			: ${escapeHtml(userAgent)}`,
+      `Screen			: ${escapeHtml(String(screen))}`,
+      `Language			: ${escapeHtml(String(language))}</code>`,
       "",
       "🔗 <b>SOURCE</b>",
-      `<code>Referrer    : ${escapeHtml(String(referrer))}`,
-      `Host        : ${escapeHtml(forwardedHost)}</code>`,
+      `<code>Referrer		: ${escapeHtml(String(referrer))}`,
+      `Host			: ${escapeHtml(forwardedHost)}</code>`,
       "",
       "📄 <b>Page</b>",
-      `<code>Path        : ${escapeHtml(String(page))}`,
-      `Title       : ${escapeHtml(String(title))}</code>`,
+      `<code>Path			: ${escapeHtml(String(page))}`,
+      `Title			: ${escapeHtml(String(title))}</code>`,
       "",
       "🛜 <b>NETWORK</b>",
-      `<code>IP Address  : ${escapeHtml(ip)}</code>`,
+      `<code>IP Address	: ${escapeHtml(ip)}</code>`,
       "",
       "🔎 <b>SESSION</b>",
-      `<code>Session ID  : ${escapeHtml(String(sessionId))}</code>`,
+      `<code>Session ID	: ${escapeHtml(String(sessionId))}</code>`,
       "",
     ].join("\n");
 
