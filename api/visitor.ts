@@ -369,6 +369,7 @@ export default async function handler(
       "📄 <b>Page</b>",
       `<code>Path        : ${escapeHtml(String(page))}`,
       `Title       : ${escapeHtml(String(title))}</code>`,
+      "",
       "🛜 <b>NETWORK</b>",
       `<code>IP Address  : ${escapeHtml(ip)}</code>`,
       "",
